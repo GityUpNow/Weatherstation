@@ -29,7 +29,8 @@ void setup() {
   pinMode(D4, OUTPUT);
   digitalWrite(D4, LOW);
   pinMode(D0, OUTPUT);
-  delay(250);
+  digitalWrite(D0, HIGH);
+  delay(1000);
 
   if (SERIALOUT) {
     Serial.begin(38400);
@@ -58,7 +59,7 @@ void setup() {
 
   delay(5000);
   digitalWrite(D4, HIGH);
-
+  turnOffLed();
 }
 
 void toggleLed() {
@@ -68,8 +69,17 @@ void toggleLed() {
   } else {
     state1 = 0;
     digitalWrite(D0, LOW);
-
   }
+}
+
+void turnOnLed() {
+    state1 = 1;
+    digitalWrite(D0, HIGH);  
+}
+
+void turnOffLed() {
+    state1 = 0;
+    digitalWrite(D0, LOW);
 }
 
 void sendData(String data) {
@@ -136,6 +146,7 @@ void sendTempSensor(float temp, float humidity) {
 unsigned long lastLocalSensorTime = 0;
 
 void readAndSendLocalSensor() {
+    turnOnLed();
     float humidity = dht.readHumidity();
     float temperature = dht.readTemperature();
     Serial.println("Temp: "+String(temperature)+ " Humidity: "+String(humidity));
@@ -144,12 +155,12 @@ void readAndSendLocalSensor() {
       sendTempSensor(temperature, humidity);
     }
     lastLocalSensorTime = millis();
-
+    turnOffLed();
 }
 
 // the loop function runs over and over again forever
 void loop() {
-  toggleLed();
+  //toggleLed();
 
   long diff = lastLocalSensorTime - millis();
   if (abs(diff) > 150*1000) {
@@ -157,9 +168,9 @@ void loop() {
     readAndSendLocalSensor();
   }
 
-  if (SERIALOUT) {
+/*  if (SERIALOUT) {
     Serial.println(String(millis()) + "  -  "+String(abs(diff)));
-  }
+  }*/
 
   while (mySerial.available() > 0) {
     String sensorData = "";
@@ -171,13 +182,13 @@ void loop() {
       }
       sensorData += String(inputBuffer[x], HEX);
     }
+    turnOnLed();
     sendData(sensorData);
+    turnOffLed();
     if (SERIALOUT) {
       Serial.println(sensorData);
       Serial.println("----");
     }
-
   }
-  delay(500);
-
+  delay(50);
 }
