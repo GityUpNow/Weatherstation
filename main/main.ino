@@ -164,8 +164,11 @@ void loop() {
 
   long diff = lastLocalSensorTime - millis();
   if (abs(diff) > 150*1000) {
+    long timeToReadSensor = millis();
     Serial.println("Sending local sensor values... ");
     readAndSendLocalSensor();
+    long diffReadTime = millis() - timeToReadSensor;
+    Serial.println("Time to read sensor: "+String(diffReadTime)+" ms");
   }
 
 /*  if (SERIALOUT) {
@@ -186,9 +189,10 @@ void loop() {
     sendData(sensorData);
     turnOffLed();
     if (SERIALOUT) {
+      Serial.println("Time: "+String(millis()));
       Serial.println(sensorData);
       Serial.println("----");
     }
   }
-  delay(50);
+  delay(1);
 }
