@@ -29,7 +29,8 @@ void setup() {
   pinMode(D4, OUTPUT);
   digitalWrite(D4, LOW);
   pinMode(D0, OUTPUT);
-  delay(250);
+  digitalWrite(D0, HIGH);
+  delay(1000);
 
   if (SERIALOUT) {
     Serial.begin(38400);
