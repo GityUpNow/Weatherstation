@@ -163,10 +163,10 @@ void loop() {
   //toggleLed();
 
   long diff = lastLocalSensorTime - millis();
-  if (abs(diff) > 150*1000) {
+  /*if (abs(diff) > 150*1000) {
     Serial.println("Sending local sensor values... ");
     readAndSendLocalSensor();
-  }
+  }*/
 
 /*  if (SERIALOUT) {
     Serial.println(String(millis()) + "  -  "+String(abs(diff)));
