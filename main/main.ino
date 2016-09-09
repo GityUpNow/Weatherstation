@@ -144,6 +144,7 @@ void sendTempSensor(float temp, float humidity) {
 }
 
 unsigned long lastLocalSensorTime = 0;
+unsigned long lastSerial = 0;
 
 void readAndSendLocalSensor() {
     turnOnLed();
@@ -163,43 +164,42 @@ void loop() {
   //toggleLed();
 
   long diff = lastLocalSensorTime - millis();
-<<<<<<< HEAD
   if (abs(diff) > 150*1000) {
     long timeToReadSensor = millis();
     Serial.println("Sending local sensor values... ");
     readAndSendLocalSensor();
     long diffReadTime = millis() - timeToReadSensor;
     Serial.println("Time to read sensor: "+String(diffReadTime)+" ms");
-  }
-=======
-  /*if (abs(diff) > 150*1000) {
-    Serial.println("Sending local sensor values... ");
-    readAndSendLocalSensor();
-  }*/
->>>>>>> 7fdc58c6aa231e6ef629173324ec7a8db075eb27
-
+  }  
 /*  if (SERIALOUT) {
     Serial.println(String(millis()) + "  -  "+String(abs(diff)));
   }*/
+  if((millis() - lastSerial) > 300000){
+    mySerial.write("S");
 
-  while (mySerial.available() > 0) {
-    String sensorData = "";
-
-    byte bytesRead = mySerial.readBytes(inputBuffer, maxBuffer);
-    for (int x = 0; x < bytesRead; x++) {
-      if (inputBuffer[x] <= 0xf) {
-        sensorData += "0";
+    delay(50);
+    
+    while (mySerial.available() > 0) {
+      String sensorData = "";
+  
+      byte bytesRead = mySerial.readBytes(inputBuffer, maxBuffer);
+      for (int x = 0; x < bytesRead; x++) {
+        if (inputBuffer[x] <= 0xf) {
+          sensorData += "0";
+        }
+        sensorData += String(inputBuffer[x], HEX);
       }
-      sensorData += String(inputBuffer[x], HEX);
+      turnOnLed();
+      sendData(sensorData);
+      turnOffLed();
+      if (SERIALOUT) {
+        Serial.println("Time: "+String(millis()));
+        Serial.println(sensorData);
+        Serial.println("----");
+      }
     }
-    turnOnLed();
-    sendData(sensorData);
-    turnOffLed();
-    if (SERIALOUT) {
-      Serial.println("Time: "+String(millis()));
-      Serial.println(sensorData);
-      Serial.println("----");
-    }
+
+    lastSerial = millis();
   }
   delay(1);
 }
