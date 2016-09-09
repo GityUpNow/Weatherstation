@@ -45,7 +45,6 @@ void loop() {
       for(size_t j = 0; j < 8; j++){
         Serial.write(Buffer[i*8+j]);
       }
-      Serial.println();
     }
 
     bufLength = 0;
