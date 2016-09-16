@@ -1,4 +1,4 @@
-#include <Arduino.h>
+#include <Arduino.h>i
 #include <Wire.h>
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
@@ -16,7 +16,7 @@ WiFiClient client;
 
 DHT dht(D2, DHT11);
 
-SoftwareSerial mySerial(D8, 11); // RX, TX
+SoftwareSerial mySerial(D8, D7); // RX, TX
 
 int incomingByte = 0;
 
@@ -36,7 +36,7 @@ void setup() {
     Serial.begin(38400);
     Serial.println("Start Platform IO");
   }
-  mySerial.begin(19200);
+  mySerial.begin(115200);
   WiFi.begin(ssid, password);
 
   while (WiFi.status() != WL_CONNECTED) {
@@ -82,17 +82,19 @@ void turnOffLed() {
     digitalWrite(D0, LOW);
 }
 
-void sendData(String data) {
+void sendData(String data, int numData) {
   if (client.connect(server, 80)) { 
     //Serial.println(F("connected to server"));
     // Make a HTTP request:
     StaticJsonBuffer<200> jsonBuffer;
     JsonArray& array = jsonBuffer.createArray();
 
-    JsonObject& sensor = array.createNestedObject();
-
-    sensor["type"] = "elv";
-    sensor["value"] = data;
+    for(int i = 0; i < numData; i++){
+      JsonObject& sensor = array.createNestedObject();
+        
+      sensor["type"] = "elv";
+      sensor["value"] = data.substring(i*16, i*16+15);
+    }
 
     String sensorJson = String("POST /rawSensor HTTP/1.0\r\nHost: "+hostName+"\r\nContent-Type: application/json\r\nConnection: close\r\n");
 
@@ -177,26 +179,38 @@ void loop() {
   if((millis() - lastSerial) > 300000){
     mySerial.write("S");
 
-    delay(50);
+    delay(1);
+
+    int count = 0;
+    String sensorData = "";
     
-    while (mySerial.available() > 0) {
-      String sensorData = "";
-  
-      byte bytesRead = mySerial.readBytes(inputBuffer, maxBuffer);
-      for (int x = 0; x < bytesRead; x++) {
+    while (mySerial.available() > 8) {
+
+      byte TEMP[8];
+      for(int i = 0; i < 8; i++){
+        TEMP[i] = mySerial.read();
+      }
+
+      if(TEMP[0] != 0x02 && TEMP[7] != 0x03)
+        continue;
+      
+      for (int x = 0; x < 8; x++) {
         if (inputBuffer[x] <= 0xf) {
           sensorData += "0";
         }
-        sensorData += String(inputBuffer[x], HEX);
+        sensorData += String(TEMP[x], HEX);
       }
-      turnOnLed();
-      sendData(sensorData);
-      turnOffLed();
-      if (SERIALOUT) {
-        Serial.println("Time: "+String(millis()));
-        Serial.println(sensorData);
-        Serial.println("----");
-      }
+      count++;
+    }
+
+    
+    turnOnLed();
+    sendData(sensorData, count);
+    turnOffLed();
+    if (SERIALOUT) {
+      Serial.println("Time: "+String(millis()));
+      Serial.println(sensorData);
+      Serial.println("----");
     }
 
     lastSerial = millis();
